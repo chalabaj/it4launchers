@@ -31,8 +31,8 @@ echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
 cp $WORKDIR/$INPFILE $SCRATCH/.
 cd $SCRATCH
 
-#mpirun -np $nproc
-$MOLPROEXE <${INPFILE} >> ${LOGFILE}
+
+mpirun -np 16 $MOLPROEXE <${INPFILE} >> ${LOGFILE}
 #   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE --launcher "${MPIRUN} %x" <${INPFILE} >> ${LOGFILE}
 #   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE <${INPFILE} >>${LOGFILE}
 
