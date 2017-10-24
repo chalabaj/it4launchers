@@ -47,7 +47,7 @@ cat > r.$name << EOF
 #PBS -l walltime=$walltime
 #PBS -A OPEN-11-34
 
-MOLPRO $input $nproc 
+MOLPROs $input $nproc 
 EOF
 
 echo "Submitting Molpro job for parallel execution in ${queue} queue with ${nproc} processes."
