@@ -14,8 +14,7 @@ export INTGDIR=${scratch}/MOLPRO-${PBS_JOBID}
 export WORKDIR=$PBS_O_WORKDIR
 mkdir -p $SCRATCH
 
-export MOLPRO_OPTIONS="--nobackup --no-xml-output -o${OUTFILE} -d${SCRATCH} -I${INTGDIR} -W${WORKDIR} -m8M"
-#export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2015_1_linux_x86_64_i8/bin/molpro
+export MOLPRO_OPTIONS="--nobackup --no-xml-output -o${OUTFILE} -d${SCRATCH} -I${INTGDIR} -W${WORKDIR}"
 export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2012/bin/molpro
 export OMP_NUM_THREADS=1
 export MPIRUN=/home/chalabaj/prog/opempi/1.10.4/bin/mpirun
@@ -31,9 +30,8 @@ echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
 cp $WORKDIR/$INPFILE $SCRATCH/.
 cd $SCRATCH
 
-
-mpirun -np 16 $MOLPROEXE <${INPFILE} >> ${LOGFILE}
-#   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE --launcher "${MPIRUN} %x" <${INPFILE} >> ${LOGFILE}
+#$MOLPROEXE <${INPFILE} >> ${LOGFILE}
+$MOLPROEXE <${INPFILE} >> ${LOGFILE}
 #   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE <${INPFILE} >>${LOGFILE}
 
 cp $SCRATCH/* $WORKDIR/.
