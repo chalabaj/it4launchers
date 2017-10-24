@@ -1,0 +1,43 @@
+#!/bin/bash
+
+name=$1
+nproc=$2
+ver=$3
+jobfile="job.log"
+SCRDIR=/scratch/work/user/$USER/${PBS_JOBID}
+
+echo  ${PBS_JOBID}     > $jobfile
+echo  ${USER}       >>  $jobfile
+echo  ${SCRDIR}    >>  $jobfile
+echo  $PBS_O_WORKDIR      >>  $jobfile
+echo "Job runs in: $SCRDIR" >> $jobfile
+
+cp job.log $PBS_O_WORKDIR/.
+if [[ -d "$SCRDIR" ]]; then
+rm -r $SCRDIR
+else
+mkdir $SCRDIR
+fi
+cp -r $PBS_O_WORKDIR/* $SCRDIR/.
+cd $SCRDIR || exit
+
+# load modules
+. /home/chalabaj/prog/fftw/3.3.5-gcc/env.sh #GCC 
+. /home/chalabaj/prog/nfft/3.2.3/env.sh 
+. /home/chalabaj/prog/libxc/3.0.0-gcc/env.sh
+. /home/chalabaj/prog/gsl/2.2-gcc/env.sh 
+. /home/chalabaj/prog/opempi/1.10.4/env.sh 
+. /home/chalabaj/prog/envmkl.sh
+. /home/chalabaj/prog/octopus/$ver-impi/env.sh
+module load imkl/11.3.3.210-iimpi-2016.03-GCC-5.3.0-2.26
+module unload GCCcore/5.3.0 ifort/2016.3.210-GCC-5.3.0-2.26 iimpi/2016.03-GCC-5.3.0-2.26 binutils/2.26-GCCcore-5.3.0 iccifort/2016.3.210-GCC-5.3.0-2.26 icc/2016.3.210-GCC-5.3.0-2.26 impi/5.1.3.181-iccifort-2016.3.210-GCC-5.3.0-2.26
+
+# execute the calculation
+mpiexec -np 12 octopus > $name.out
+
+# copy output file to home
+rm core.*
+cp -r -u $SCRDIR/* $PBS_O_WORKDIR/.
+
+#exit
+exit

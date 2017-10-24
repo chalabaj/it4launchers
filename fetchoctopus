@@ -1,0 +1,5 @@
+#!/bin/bash
+
+from=$(head -n3 job.log | tail -n1)
+echo "copying from: $from"
+cp -r -u  $from/* .

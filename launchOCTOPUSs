@@ -1,0 +1,69 @@
+#!/bin/bash
+rm job.log
+function PrintHelp {
+   echo " "
+   echo "USAGE: 'launchOCTOPUS inputfile nproc que walltime=hh:mm:ss ver' "
+   echo "que = qexp (max 1 hour); qprod (max 48 hours), qlong (max 144 hours)"
+      echo "Available versions are: 6.0 and 7.1"
+   exit 1
+}
+
+if [[ $# -lt "4" ]]; then
+   echo "Not enough parameters."
+   PrintHelp
+fi
+
+#INPUT FILE
+input=$1
+if [[ ! -e "$input" ]];then
+   echo "File $input does not exist. Exiting."
+   PrintHelp
+fi
+cp $input inp                                     #octopus requires inp file in cwd
+name=`echo "$input" | cut -d'.' -f1`              #namefile without extenson
+#------------------------------------------------------------------------------------
+
+
+#NPROC, NNODES
+
+nproc=$2
+mem=$(($nproc*4))
+if ! [[ $nproc =~ ^[1-9]+$ ]] ; then
+   echo "error: Nproc is not an integer number" 
+   PrintHelp
+fi
+
+#which queue  #qexp qprod
+queue=$3
+#if [[ "$queue" -ne "qprod" OR "$queue" -ne "qprod" OR "$queue" -ne "qlong" ]]; then
+# echo "error: unknown que, use qprod or qexp for testing"
+# PrintHelp
+#fi
+
+walltime=$4
+if [ -z "$5" ]
+  then
+    echo "Version not specified, setting version 6.0"
+    ver="6.0"  
+  else
+    ver=$5
+fi
+
+
+#parallelization
+cat > r.$name << EOF
+#!/bin/bash
+
+#PBS -q $queue
+#PBS -N $name.out
+#PBS -l select=1:ncpus=$nproc:mem=${mem}gb:ompthreads=1
+#PBS -l walltime=$walltime
+#PBS -A OPEN-10-48
+
+OCTOPUS $name $nproc $ver
+EOF
+
+echo "Launching parallel OCTOPUS 6.0 job for $input using $nproc processors."
+echo "Results will be saved to $name.out, JOB information in $name.log"
+
+qsub r.$name
