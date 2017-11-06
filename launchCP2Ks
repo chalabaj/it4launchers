@@ -1,0 +1,58 @@
+#!/bin/bash
+
+function PrintHelp {
+   echo " "
+   echo "USAGE: 'launchOCTOPUS inputfile nproc que walltime=hh:mm:ss ver' "
+   echo "que = qexp (max 1 hour); qprod (max 48 hours), qlong (max 144 hours)"
+   echo "Available versions are: 6.0 and 7.1"
+   exit 1
+}
+
+if [[ $# -lt "4" ]]; then
+   echo "Not enough parameters."
+   PrintHelp
+fi
+
+#INPUT FILE
+input=$1
+name=`echo "$input" | cut -d'.' -f1`     #namefile without extenson
+
+if [[ ! -e "$input" ]];then
+   echo "File $input does not exist. Exiting."
+   PrintHelp
+fi
+
+nproc=$2
+if [ "`echo ${nproc} | grep '^[0-9]*$'`" != ${nproc} ]; then
+    echo "Error: number_of_cpus parameter is not a number!"
+    PrintHelp
+fi
+
+mem=$(($nproc*1))
+#which queue  #qexp qprod
+queue=$3
+#if [ "$queue" -ne "qprod" -o "$queue" -ne "qprod" -o "$queue" -ne "qlong" ]; then
+#echo "error: unknown que, use qprod or qexp for testing"
+#PrintHelp
+#fi
+
+#mpiprocs=4:
+walltime=$4
+
+cat > r.$name << EOF
+#!/bin/bash
+
+#PBS -q $queue
+#PBS -N $name.out
+#PBS -l select=1:ncpus=24:mpiprocs=24:mem=24gb:ompthreads=1
+#PBS -l walltime=$walltime
+#PBS -A OPEN-10-48
+
+CP2Ks $input $nproc 
+EOF
+
+echo "Submitting CP2K job for single node parallel execution in ${queue} queue with ${nproc} processes."
+
+qsub r.$name
+
+

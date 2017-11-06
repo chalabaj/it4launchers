@@ -1,0 +1,32 @@
+#!/bin/bash
+module purge
+module load OpenMPI/1.10.7-GCC-7.1.0-2.28
+#PBS -V
+INPFILE=$1
+LOGFILE=$1.log
+OUTFILE=$1.out
+nproc=$2
+
+scratch=/scratch/work/user/$USER
+export SCRATCH=${scratch}/cp2k-${PBS_JOBID}
+export CP2KEXE=/home/chalabaj/prog/cp2k/cp2k-5.1-Linux-x86_64.ssmp
+export OMP_NUM_THREADS=1
+#export MPIRUN=/home/chalabaj/prog/opempi/1.10.4/bin/mpirun
+mkdir $SCRATCH
+cp $PBS_O_WORKDIR/* $SCRATCH/.
+cd $SCRATCH 
+echo  ${PBS_JOBID}    > ${LOGFILE}
+echo  ${USER}         >> ${LOGFILE}
+echo  ${SCRATCH}      >>  ${LOGFILE}
+echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
+echo "start"          >> ${LOGFILE}
+
+mpirun -np 24 $CP2KEXE -i $INPFILE -o $OUTFILE
+
+
+#COPY CLEAN EXIT
+cp -pr $SCRATCH/* ${PBS_O_WORKDIR}/.
+rm -rf $SCRATCH
+module purge
+
+exit
