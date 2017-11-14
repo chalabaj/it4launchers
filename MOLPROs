@@ -1,14 +1,14 @@
 #!/bin/bash
-
+module purge
+module load MPICH/3.2-GCC-5.3.0-2.25
+#OpenMPI/1.10.7-GCC-7.1.0-2.28
 #PBS -V
-# Molpro 2012 SGE submission script (single- and nulti-processor version)
-
 INPFILE=$1
 LOGFILE=$1.log
 OUTFILE=$1.out
 nproc=$2
 
-scratch=/scratch/work/user/$USER/
+scratch=/scratch/work/user/$USER
 export SCRATCH=${scratch}/MOLPRO-${PBS_JOBID}
 export INTGDIR=${scratch}/MOLPRO-${PBS_JOBID}
 export WORKDIR=${PBS_O_WORKDIR}
@@ -17,8 +17,8 @@ mkdir -p $SCRATCH
 export MOLPRO_OPTIONS="--nobackup --no-xml-output -o${OUTFILE} -d${SCRATCH} -I${INTGDIR} -W${WORKDIR} -m8M"
 export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2012/bin/molpro
 #export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2015_1_linux_x86_64_i8/bin/molpro
-export OMP_NUM_THREADS=12
-export MPIRUN=/home/chalabaj/prog/opempi/1.10.4/bin/mpirun
+export OMP_NUM_THREADS=1
+#export MPIRUN=/home/chalabaj/prog/opempi/1.10.4/bin/mpirun
 
 #cp $PBS_O_WORKDIR/$INPFILE $SCRATCH/.
 cd $WORKDIR 
@@ -27,11 +27,15 @@ echo  ${USER}         >> ${LOGFILE}
 echo  ${SCRATCH}       >>  ${LOGFILE}
 echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
 
-
-$MPIRUN -np $nproc --hostfile $PBS_NODEFILE $MOLPROEXE < $INPFILE >> ${LOGFILE} 
+echo "start" > ${LOGFILE}
+mpirun -np 4 $MOLPROEXE < $INPFILE 
 
 #   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE <${INPFILE} >>${LOGFILE}
-
+# --hostfile $PBS_NODEFILE
 #cp  $SCRATCH/* ${PBS_O_WORKDIR}/.
-#rm -rf $SCRATCH
-
+echo "mpi" >> ${LOGFILE}
+rm -rf $SCRATCH
+echo "rm" >> ${LOGFILE}
+module purge
+echo "purge" >> ${LOGFILE}
+exit

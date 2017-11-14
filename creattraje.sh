@@ -174,10 +174,11 @@ while [[ $i -le "$nsample" ]];do
 
    cat > $folder/TRAJ.$i/r.$molname.$i << EOF
 #!/bin/bash
-JOBNAME=ABIN.$molname.${i}_$$_\${JOB_ID}
+JOBNAME=ABIN.$molname.${i}_${PBS_JOBID}
 INPUTPARAM=input.in
 INPUTGEOM=mini.dat
 OUTPUT=output
+TRAJ=$i
 EOF
 
    if [[ ! -z $veloc ]];then
