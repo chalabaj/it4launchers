@@ -33,7 +33,7 @@ mkdir $SCRDIR
 cp $PBS_O_WORKDIR/* $SCRDIR/.
 cd $SCRDIR
 
-mpiexec -np $NPROCS $CP2KEXE  -i $INPFILE -o $OUTFILE 
+mpiexec -np $NPROCS $CP2KEXE  -i $INPFILE > $OUTFILE 
 echo "Job terminated normally."          >> ${LOGFILE}
 #--------------------------------------------------------
 
