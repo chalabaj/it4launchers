@@ -40,7 +40,7 @@ echo "Job terminated normally."          >> ${LOGFILE}
 #COPY CLEAN EXIT
 cd ../
 cp -pr $SCRDIR ${PBS_O_WORKDIR}/.
-cp $OUTFILE ${PBS_O_WORKDIR}/.
+cp $SCRDIR/$OUTFILE ${PBS_O_WORKDIR}/.
 rm -rf $SCRDIR
 #--------------------------------------------------------
 
