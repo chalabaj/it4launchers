@@ -14,7 +14,7 @@ module load imkl/2017.1.132-iimpi-2017a
 module load MPICH/3.2-GCC-5.3.1-snapshot-20160419-2.25
 
 export OMP_NUM_THREADS=1
-export SCRDIR=/scratch/work/user/$USER/cp2k_$INPFILE_${PBS_JOBID}    # SCRATCH DIR WHERE TO RUN JOB
+export SCRDIR=/scratch/work/user/$USER/cp2k_${INPFILE}_${PBS_JOBID}    # SCRATCH DIR WHERE TO RUN JOB
 export CP2KEXE=/home/chalabaj/install/cp2k-5.1/exe/local/cp2k.popt   # MPI PARALLEL VERSION { possible to use other ssmp etc but not regtestes
 export CP2K_DATA_DIR=/home/chalabaj/install/cp2k-5.1/data            # Where to find CP2K files such as basis set, PP etc
 #--------------------------------------------------------
@@ -22,7 +22,7 @@ export CP2K_DATA_DIR=/home/chalabaj/install/cp2k-5.1/data            # Where to 
 #PREPARE LOG FILE
 echo  ${PBS_JOBID}     > ${LOGFILE}
 echo  ${USER}         >> ${LOGFILE}
-echo  ${SCRATCH}      >>  ${LOGFILE}
+echo  ${SCRDIR}      >>  ${LOGFILE}
 echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
 echo "start"          >> ${LOGFILE}
 #--------------------------------------------------------
