@@ -44,7 +44,7 @@ cat > r.$name << EOF
 
 #PBS -q $queue
 #PBS -N $name.out
-#PBS -l select=1:ncpus=24:mpiprocs=4:mem=24gb
+#PBS -l select=1:ncpus=24:mpiprocs=4:mem=96gb
 #PBS -l walltime=$walltime
 #PBS -A OPEN-10-48
 
