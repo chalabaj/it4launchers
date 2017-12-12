@@ -1,0 +1,105 @@
+#!/bin/bash
+projectname=DIMER        # must match with PC2k project name to copy proper WF
+INPUTDIR=inputsdir
+folder=testinglaunch     # Name of the folder with trajectories
+rewrite=1                # if =1 -> rewrite trajectories that already exist
+jobs=24                  # number of batch jobs to submit. Trajectories will be distributed accordingly.
+runtype=WF               # WF, SCFION, RTP
+ntrajs=47                   # number of trajectories 
+#QSUB PBS SETTINGS------------------
+queue=qexp             # Avaible ques: qprod qlong qexp qfree
+walltime=01:00:00      # The maximum runtime in qlong is 144 hours, qprod is 48 hours,  qexp is 1 hour
+mem=24
+
+if [ "$queue" != "qprod" ] && [ "$queue" != "qexp" ] && [ "$queue" != "qlong" ] ; then
+echo "error: unknown que: $queue; use qprod, glong or qexp for testing"
+PrintHelp
+fi
+
+PATCHED=patched     #CP2K unpatched
+
+if [ "$PATCHED" != "unpatched" ] && [ "$PATCHED" != "patched" ] ; then  
+echo "error: unknown version: $PATCHED; use patched or unpatched"
+PrintHelp
+fi
+#---------------------------------------------
+
+#PREPARE TRAJECTORY FOLDERS
+if [[ "$runtype" -eq "WF" ]];then
+   if [[ -e "$folder" ]];then
+      if [[ "$rewrite" -eq "1" ]];then
+
+         rm -r $folder ; mkdir $folder/TRAJ.$i
+      else
+         echo "Folder exists, either allow rewrite of change the name of folder!"
+         echo "Exiting..."
+         exit 1
+      fi
+   else
+      mkdir $folder/  
+   fi
+
+elif [[ "$runtype" -eq "SCFION" ]];then
+
+#loop to screate folder and copy proper WF
+elif [[ "$runtype" -eq "SCFION" ]];then
+
+else 
+ echo "Unknow runtype..."
+   exit 1
+fi 
+
+
+$i=1
+   while [[ $i -le "$ntrajs" ]];do
+   mkdir $folder/TRAJ.$i/$runtype
+   done
+
+cat > $folder/TRAJ.$i/r.$runtype.$i << EOF
+#!/bin/bash
+#PBS -V
+JOBNAME=CP2k_${runtype}_${i}_\${PBS_JOBID}
+EOF
+cat $inputsdir/CP2Ks-dynamics >> $folder/TRAJ.$i/r.$runtype.$i
+
+#movie proc to geoms
+#geoms to dimer_$i.xyz
+# sed .inp files to change coord file
+
+
+#------------------------------------------------
+
+
+#PREPARE submiting script 
+k=1
+while [[ $k -le $jobs ]]
+   do
+cat > r.$name << EOF
+#!/bin/bash
+
+#PBS -q $queue
+#PBS -N $name.out
+#PBS -l select=1:ncpus=24:mpiprocs=24:mem=96gb
+#PBS -l walltime=$walltime
+#PBS -A OPEN-10-48
+
+CP2Ks $input $nproc $PATCHED
+EOF
+    if [[ `expr $k % 2` -eq 0 ]]; then  # 24 cpu, 12 cpu per job = 2 traj in one submited script
+      let k++
+    fi
+done
+fi
+
+if [[ ! -z "$submit" ]];then
+   cd $folder
+   while [[ $k -le $j ]]
+   do
+      if [[ -f $molname.$isample.$k.sh ]];then
+        echo "wait" >> $molname.$isample.$j.sh     # whille all parallel jobs running, wait until the very last traj is done
+        # $submit -V -cwd $molname.$isample.$k.sh
+      fi
+      let k++
+   done
+fi
+

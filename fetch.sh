@@ -5,7 +5,7 @@ if [[ -n "$1" ]]; then
 	echo "log file found: $1"
 	SCRDIR=$(head -3 $1 | tail -1)
 	echo "SCRATCH: $SCRDIR:"
-        KDE=$(tail -2 $1 | head -1)
+        KDE=$(head -4 $1 | tail -1)
 	echo "Final folder $KDE" 
 	echo "COPYING FILE"
 	cp -r $SCRDIR $KDE/.
