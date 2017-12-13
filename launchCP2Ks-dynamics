@@ -1,13 +1,14 @@
 #!/bin/bash
-projectname=DIMER        # must match with PC2k project name to copy proper WF
-INPUTDIR=inputsdir-pbe
+projectname=DIMER        # must match with CP2k project name in *inp files to copy proper WF
+INPUTDIR=inputsdir-pbe   # Where to look for CPK2Ks-dynamics file, geometry and input runtype files
 folder=testinglaunch     # Name of the folder with trajectories
 rewrite=1                # if =1 -> rewrite trajectories that already exist
-runtype=WF               # WF, SCFION, RTP
+runtype=$1               # WF, SCFION, RTP
 ntrajs=47                # number of trajectories 
 movie=$INPUTDIR/geomsalltdddft.xyz               # movie from which to take geometries
-TASKPERJOB=2
-NJOBS=24
+TASKPERJOB=3           # How many simulataneous tasks will be executed within one qsub file
+NJOBS=16               # Number of submited files
+NPROCS=8               # $CPUs per mpirun -np switch
 #QSUB PBS SETTINGS------------------
 queue=qexp             # Avaible ques: qprod qlong qexp qfree
 walltime=01:00:00      # The maximum runtime in qlong is 144 hours, qprod is 48 hours,  qexp is 1 hour
@@ -27,6 +28,10 @@ if [ "$PATCHED" != "unpatched" ] && [ "$PATCHED" != "patched" ] ; then
  exit 1
 fi
 
+if [ "$runtype" != "WF" ] && [ "$runtype" != "SCFION" ] && [ "$runtype" != "RTP" ] ; then  
+ echo "error: unknown runtype: $runtype; WF, SCFION or RTP"
+ exit 1
+fi
 if [[ ! -f "$movie" ]];then
   echo "No $movie file. Exit."
   exit 1
@@ -57,6 +62,7 @@ cat > $folder/$projectname.$runtype.$k.sh << EOF
 #PBS -l select=1:ncpus=24:mpiprocs=24:mem=96gb
 #PBS -l walltime=$walltime
 #PBS -A OPEN-10-48
+#PBS -e ERROR_$projectname.$runtype.$k.sh
 
 EOF
 done
@@ -68,6 +74,10 @@ i=1  #TRAJ
 while [[ $i -le "$ntrajs" ]]; do
  echo "Preparing TRAJ.$i/$runtype"
  #PREPARE TRAJECTORY FOLDERS
+ if [[ ! -e "$folder/TRAJ.$i" ]];then
+    mkdir $folder/TRAJ.$i/
+ fi
+ 
  if [[ -e "$folder/TRAJ.$i/$runtype" ]];then
       if [[ "$rewrite" -eq "1" ]];then
          rm -r $folder/TRAJ.$i/$runtype
@@ -77,10 +87,9 @@ while [[ $i -le "$ntrajs" ]]; do
          echo "Exiting..."
          exit 1
       fi
-else
-      mkdir $folder/TRAJ.$i/
+ else
       mkdir $folder/TRAJ.$i/$runtype 
-fi
+ fi
 
  cp $INPUTDIR/$runtype.inp  $folder/TRAJ.$i/$runtype/.
  sed -i "s/PROJECT/PROJECT ${projectname}_${i}/g" $folder/TRAJ.$i/$runtype/$runtype.inp  #input files have only PROJECT withou any other specification
@@ -110,12 +119,15 @@ fi
 cat > $folder/TRAJ.$i/$runtype/r.$runtype.$i << EOF
 #!/bin/bash
 #PBS -V
-IWORKDIR=$PWD/$folder/TRAJ.$i/$runtype  # where the calculation run a  where to copy final data
+
+# where to copy final data
+IWORKDIR=$PWD/$folder/TRAJ.$i/$runtype  
+
 JOBNAME=${folder}_${runtype}_traj${i}_\${PBS_JOBID}
 INPFILE=$runtype.inp
 WFFILE=${projectname}_${i}-RESTART.wfn
-NPROCS=8   # ech paralell job to have X cores
-LOGFILE=$IWORKDIR/${folder}_${runtype}_traj${i}_\${PBS_JOBID}.log #input file
+NPROCS=$NPROCS   # ech paralell job to have X cores
+LOGFILE=${folder}_${runtype}_${i}_\${PBS_JOBID}.log #input file
 PATCHED=$PATCHED                                                         #number of CPUs
 OUTFILE=$runtype.out
 
@@ -134,7 +146,7 @@ done
 
 cd $folder
 k=1
-for k in {1..$NJOBS}
+for ((k=1;k<=$NJOBS;k++))
 do
    if [[ -f "$projectname.$runtype.$k.sh" ]];then
       echo "wait" >> $projectname.$runtype.$k.sh     # whille all parallel jobs running, wait until the very last traj is done

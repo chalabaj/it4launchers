@@ -20,6 +20,7 @@ export CP2K_DATA_DIR=/home/chalabaj/install/cp2k-5.1/data            # Where to 
 #--------------------------------------------------------
 
 #PREPARE LOG FILE
+cd $IWORKDIR
 echo  ${PBS_JOBID}     > ${LOGFILE}
 echo  ${USER}         >> ${LOGFILE}
 echo  ${SCRDIR}       >> ${LOGFILE}
@@ -33,9 +34,10 @@ echo "start"          >> ${LOGFILE}
 mkdir $SCRDIR
 
 #copy input and WF , proper WF selected according to the type of calculation in launchCP2k=dynamics
-cp $IWORKDIR/$runtype.inp   $SCRDIR/.
-cp $IWORKDIR/$WFFILE        $SCRDIR/.
-cp $IWORKDIR/${LOGFILE}     $SCRDIR/.
+cp $IWORKDIR/$INPFILE  $SCRDIR/.
+cp $IWORKDIR/$WFFILE   $SCRDIR/.
+cp $IWORKDIR/$LOGFILE  $SCRDIR/.
+
 cd $SCRDIR
 
 mpiexec -np $NPROCS $CP2KEXE  -i $INPFILE > $OUTFILE 
