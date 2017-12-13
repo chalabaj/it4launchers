@@ -129,7 +129,7 @@ NPROCS=$NPROCS   # ech paralell job to have X cores
 LOGFILE=${folder}_${runtype}_${i}_\${PBS_JOBID}.log #input file
 PATCHED=$PATCHED                                                         #number of CPUs
 OUTFILE=$runtype.out
-$GEOMFILE=${projectname}_${i}.xyz
+GEOMFILE=${projectname}_${i}.xyz
 RUNTYPE=${runtype}
 
 EOF
@@ -156,7 +156,7 @@ do
       chmod +x $projectname.$runtype.$k.sh
       qsub $projectname.$runtype.$k.sh
    fi
-wait 5s
+
 done
 
 

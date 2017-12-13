@@ -38,7 +38,7 @@ cp $IWORKDIR/$INPFILE  $SCRDIR/.
 cp $IWORKDIR/$LOGFILE  $SCRDIR/.
 cp $IWORKDIR/$GEOMFILE  $SCRDIR/.
 
-if [[ "$RUNTYPE" = "SCFION" ]] && [ "$RUNTYPE" != "RTP" ] ; then 
+if [[ "$RUNTYPE" = "SCFION" ]] || [[ "$RUNTYPE" = "RTP" ]] ; then 
    cp $IWORKDIR/$WFFILE   $SCRDIR/.
 
 fi
@@ -53,7 +53,7 @@ echo "Job terminated normally."          >> ${LOGFILE}
 cd ../
 cp -pr $SCRDIR/* $IWORKDIR/.
 #cp $SCRDIR/$OUTFILE ${PBS_O_WORKDIR}/.
-rm -rf $SCRDIR
+#rm -rf $SCRDIR
 #--------------------------------------------------------
 
 #EXIT
