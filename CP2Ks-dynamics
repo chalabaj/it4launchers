@@ -1,13 +1,5 @@
-#!/bin/bash
-
 # INPUTS FROM launchCP2Ks
-INPFILE=$1                                                            #input file
-NPROCS=$2   
-PATCHED=$3                                                          #number of CPUs
-LOGFILE=$PBS_O_WORKDIR/$1_${PBS_JOBID}.log
-OUTFILE=$1.out
 
-#PBS -V
 
 #ENVIRONMENT VARIABLE AND MODULE LOAD
 module purge
@@ -31,7 +23,7 @@ export CP2K_DATA_DIR=/home/chalabaj/install/cp2k-5.1/data            # Where to 
 echo  ${PBS_JOBID}     > ${LOGFILE}
 echo  ${USER}         >> ${LOGFILE}
 echo  ${SCRDIR}       >> ${LOGFILE}
-echo  $PBS_O_WORKDIR  >> ${LOGFILE}
+echo  $IWORKDIR       >> ${LOGFILE}
 echo  $CP2KEXE        >> ${LOGFILE}
 echo  $PATCHED        >> ${LOGFILE}
 echo "start"          >> ${LOGFILE}
@@ -40,7 +32,10 @@ echo "start"          >> ${LOGFILE}
 #PREPARE DIR AND RUN CALC
 mkdir $SCRDIR
 
-cp $PBS_O_WORKDIR/* $SCRDIR/.
+#copy input and WF , proper WF selected according to the type of calculation in launchCP2k=dynamics
+cp $IWORKDIR/$runtype.inp   $SCRDIR/.
+cp $IWORKDIR/$WFFILE        $SCRDIR/.
+cp $IWORKDIR/${LOGFILE}     $SCRDIR/.
 cd $SCRDIR
 
 mpiexec -np $NPROCS $CP2KEXE  -i $INPFILE > $OUTFILE 
@@ -49,7 +44,7 @@ echo "Job terminated normally."          >> ${LOGFILE}
 
 #COPY CLEAN EXIT
 cd ../
-cp -pr $SCRDIR ${PBS_O_WORKDIR}/.
+cp -pr $SCRDIR/* $IWORKDIR/.
 #cp $SCRDIR/$OUTFILE ${PBS_O_WORKDIR}/.
 rm -rf $SCRDIR
 #--------------------------------------------------------
