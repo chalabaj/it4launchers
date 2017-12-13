@@ -4,10 +4,10 @@ INPUTDIR=inputsdir-pbe   # Where to look for CPK2Ks-dynamics file, geometry and 
 folder=testinglaunch     # Name of the folder with trajectories
 rewrite=1                # if =1 -> rewrite trajectories that already exist
 runtype=$1               # WF, SCFION, RTP
-ntrajs=47                # number of trajectories 
+ntrajs=6                # number of trajectories 
 movie=$INPUTDIR/geomsalltdddft.xyz               # movie from which to take geometries
 TASKPERJOB=3           # How many simulataneous tasks will be executed within one qsub file
-NJOBS=16               # Number of submited files
+NJOBS=2               # Number of submited files
 NPROCS=8               # $CPUs per mpirun -np switch
 #QSUB PBS SETTINGS------------------
 queue=qexp             # Avaible ques: qprod qlong qexp qfree
@@ -58,7 +58,6 @@ do
 cat > $folder/$projectname.$runtype.$k.sh << EOF
 #!/bin/bash
 #PBS -q $queue
-#PBS -N $name.out
 #PBS -l select=1:ncpus=24:mpiprocs=24:mem=96gb
 #PBS -l walltime=$walltime
 #PBS -A OPEN-10-48
@@ -151,8 +150,10 @@ do
    if [[ -f "$projectname.$runtype.$k.sh" ]];then
       echo "wait" >> $projectname.$runtype.$k.sh     # whille all parallel jobs running, wait until the very last traj is done
       echo "Submiting: $projectname.$runtype.$k.sh"
-    # qsub -V -cwd $molname.$isample.$k.sh
+      qsub $projectname.$runtype.$k.sh
+      chmod +x $projectname.$runtype.$k.sh
    fi
+   wait 5s
 done
 
 
