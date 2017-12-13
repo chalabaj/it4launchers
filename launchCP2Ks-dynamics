@@ -1,17 +1,17 @@
 #!/bin/bash
 projectname=DIMER        # must match with PC2k project name to copy proper WF
-INPUTDIR=inputsdir
+INPUTDIR=inputsdir-pbe
 folder=testinglaunch     # Name of the folder with trajectories
 rewrite=1                # if =1 -> rewrite trajectories that already exist
 runtype=WF               # WF, SCFION, RTP
 ntrajs=47                # number of trajectories 
-movie=.xyz               # movie from which to take geometries
-TASKPERJOBS=2
+movie=$INPUTDIR/geomsalltdddft.xyz.xyz               # movie from which to take geometries
+TASKPERJOB=2
 NJOBS=24
 #QSUB PBS SETTINGS------------------
 queue=qexp             # Avaible ques: qprod qlong qexp qfree
 walltime=01:00:00      # The maximum runtime in qlong is 144 hours, qprod is 48 hours,  qexp is 1 hour
-
+PATCHED=unpatched
 
 
 #-------CHECKS-----------------
@@ -20,7 +20,7 @@ if [ "$queue" != "qprod" ] && [ "$queue" != "qexp" ] && [ "$queue" != "qlong" ] 
  exit 1
 fi
 
-PATCHED=patched     #CP2K unpatched
+     #CP2K unpatched
 
 if [ "$PATCHED" != "unpatched" ] && [ "$PATCHED" != "patched" ] ; then  
  echo "error: unknown version: $PATCHED; use patched or unpatched"
@@ -28,23 +28,33 @@ if [ "$PATCHED" != "unpatched" ] && [ "$PATCHED" != "patched" ] ; then
 fi
 
 if [[ ! -f "$movie" ]];then
+  echo "No $movie file. Exit."
+  exit 1
+fi
+
+if [[ ! -f "$INPUTDIR/$runtype.inp" ]];then
+ echo "No $runtype.inp file. Exit"
+ exit 1
+fi
+
+if [[ ! -f "$INPUTDIR/CP2Ks-dynamics" ]];then   # SCRATCH dir, job calc. key file
+ echo "No CP2Ks-dynamics file in $INPUTDIR. Exit"
  exit 1
 fi
 #---------------------------------------------
 
 #PREPARE TRAJECTORY FOLDERS
-   if [[ -e "$folder" ]];then
+if [[ -e "$folder" ]];then
       if [[ "$rewrite" -eq "1" ]];then
-
          rm -r $folder ; mkdir $folder
       else
-         echo "Folder exists, either allow rewrite of change the name of folder!"
+         echo "Folder exists, either allow rewrite of change the name of the folder!"
          echo "Exiting..."
          exit 1
       fi
-   else
+else
       mkdir $folder  
-   fi
+fi
 
 
 for k in {1..$NJOBS}
@@ -65,17 +75,20 @@ k=1  # .sh script
 i=1  #TRAJ
 
 while [[ $i -le "$ntrajs" ]]; do
+ echo "Preparing TRAJ.$i"
  mkdir $folder/TRAJ.$i/$runtype
- cp INPUTDIR/$runtype.inp  $folder/TRAJ.$i/$runtype/.
+ cp $INPUTDIR/$runtype.inp  $folder/TRAJ.$i/$runtype/.
  sed -i 's/PROJECT/PROJECT ${projectname}_${i}/g' $folder/TRAJ.$i/$runtype/$runtype.inp  #input files have only PROJECT withou any other specification
  
  #SCF STEP 0 to get ion with same neutral orbitals  require neutral WF
- if [[ "$runtype" -eq "SCFION" ]];then
+ if [[ "$runtype" = "SCFION" ]];then
    cp $folder/TRAJ.$i/WF/$projectname_$i-RESTART.wfn $folder/TRAJ.$i/SCFION/.
+   PATCHED=patched
  fi
  #RTF dynamic require WF from 0 SCF step of ion
- if [[ "$runtype" -eq "RTP" ]];then
+ if [[ "$runtype" = "RTP" ]];then
  cp $folder/TRAJ.$i/SCFION/$projectname_$i-RESTART.wfn $folder/TRAJ.$i/RTP/.
+   PATCHED=unpatched
  fi
  
  #GEOM ----------------------------------------------
@@ -96,18 +109,18 @@ JOBNAME=${folder}_${runtype}_traj${i}_\${PBS_JOBID}
 INPFILE=$runtype.inp
 WFFILE=${projectname}_${i}-RESTART.wfn
 NPROCS=8   # ech paralell job to have X cores
-LOGFILE=$IWORKDIR/$runtype_\${PBS_JOBID}.log #input file
+LOGFILE=$IWORKDIR/${folder}_${runtype}_traj${i}_\${PBS_JOBID}.log #input file
 PATCHED=$PATCHED                                                         #number of CPUs
 OUTFILE=$runtype.out
 
 EOF
-cat $inputsdir/CP2Ks-dynamics >> $folder/TRAJ.$i/$runtype/r.$runtype.$i
+cat $INPUTDIR/CP2Ks-dynamics >> $folder/TRAJ.$i/$runtype/r.$runtype.$i
 
 #Simultaneous jobs in one file 
 echo "(cd $PWD/$folder/TRAJ.$i/$runtype/; ./r.$runtype.$i ) &">> $folder/$projectname.$runtype.$k.sh
 
-if [[ `expr $i % $TASKPERJOBS` -eq 0 ]]; then
-let k++
+if [[ `expr $i % $TASKPERJOB` -eq 0 ]]; then
+ let k++
 fi
 
 let i++
@@ -116,11 +129,12 @@ done
 cd $folder
 k=1
 for k in {1..$NJOBS}
- do
-   if [[ -f $projectname.$runtype.$k.sh ]];then
+do
+   if [[ -f "$projectname.$runtype.$k.sh" ]];then
       echo "wait" >> $projectname.$runtype.$k.sh     # whille all parallel jobs running, wait until the very last traj is done
+      echo "Submiting: $projectname.$runtype.$k.sh"
     # qsub -V -cwd $molname.$isample.$k.sh
    fi
- done
+done
 
 
