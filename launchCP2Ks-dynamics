@@ -5,7 +5,7 @@ folder=testinglaunch     # Name of the folder with trajectories
 rewrite=1                # if =1 -> rewrite trajectories that already exist
 runtype=WF               # WF, SCFION, RTP
 ntrajs=47                # number of trajectories 
-movie=$INPUTDIR/geomsalltdddft.xyz.xyz               # movie from which to take geometries
+movie=$INPUTDIR/geomsalltdddft.xyz               # movie from which to take geometries
 TASKPERJOB=2
 NJOBS=24
 #QSUB PBS SETTINGS------------------
@@ -20,7 +20,7 @@ if [ "$queue" != "qprod" ] && [ "$queue" != "qexp" ] && [ "$queue" != "qlong" ] 
  exit 1
 fi
 
-     #CP2K unpatched
+     #CP2K unpatched  version control
 
 if [ "$PATCHED" != "unpatched" ] && [ "$PATCHED" != "patched" ] ; then  
  echo "error: unknown version: $PATCHED; use patched or unpatched"
@@ -43,22 +43,13 @@ if [[ ! -f "$INPUTDIR/CP2Ks-dynamics" ]];then   # SCRATCH dir, job calc. key fil
 fi
 #---------------------------------------------
 
-#PREPARE TRAJECTORY FOLDERS
-if [[ -e "$folder" ]];then
-      if [[ "$rewrite" -eq "1" ]];then
-         rm -r $folder ; mkdir $folder
-      else
-         echo "Folder exists, either allow rewrite of change the name of the folder!"
-         echo "Exiting..."
-         exit 1
-      fi
-else
-      mkdir $folder  
-fi
-
-
-for k in {1..$NJOBS}
+ if [[ ! -e "$folder" ]];then
+  mkdir $folder
+ fi
+ 
+for ((k=1;k<=$NJOBS;k++))
 do
+
 cat > $folder/$projectname.$runtype.$k.sh << EOF
 #!/bin/bash
 #PBS -q $queue
@@ -75,28 +66,43 @@ k=1  # .sh script
 i=1  #TRAJ
 
 while [[ $i -le "$ntrajs" ]]; do
- echo "Preparing TRAJ.$i"
- mkdir $folder/TRAJ.$i/$runtype
+ echo "Preparing TRAJ.$i/$runtype"
+ #PREPARE TRAJECTORY FOLDERS
+ if [[ -e "$folder/TRAJ.$i/$runtype" ]];then
+      if [[ "$rewrite" -eq "1" ]];then
+         rm -r $folder/TRAJ.$i/$runtype
+         mkdir $folder/TRAJ.$i/$runtype 
+      else
+         echo "Folder exists, either allow rewrite of change the name of the folder!"
+         echo "Exiting..."
+         exit 1
+      fi
+else
+      mkdir $folder/TRAJ.$i/
+      mkdir $folder/TRAJ.$i/$runtype 
+fi
+
  cp $INPUTDIR/$runtype.inp  $folder/TRAJ.$i/$runtype/.
- sed -i 's/PROJECT/PROJECT ${projectname}_${i}/g' $folder/TRAJ.$i/$runtype/$runtype.inp  #input files have only PROJECT withou any other specification
+ sed -i "s/PROJECT/PROJECT ${projectname}_${i}/g" $folder/TRAJ.$i/$runtype/$runtype.inp  #input files have only PROJECT withou any other specification
  
  #SCF STEP 0 to get ion with same neutral orbitals  require neutral WF
  if [[ "$runtype" = "SCFION" ]];then
-   cp $folder/TRAJ.$i/WF/$projectname_$i-RESTART.wfn $folder/TRAJ.$i/SCFION/.
+   cp $folder/TRAJ.$i/WF/${projectname}_$i-RESTART.wfn $folder/TRAJ.$i/SCFION/.
    PATCHED=patched
  fi
  #RTF dynamic require WF from 0 SCF step of ion
  if [[ "$runtype" = "RTP" ]];then
- cp $folder/TRAJ.$i/SCFION/$projectname_$i-RESTART.wfn $folder/TRAJ.$i/RTP/.
+ cp $folder/TRAJ.$i/SCFION/${projectname}_$i-RESTART.wfn $folder/TRAJ.$i/RTP/.
    PATCHED=unpatched
  fi
  
  #GEOM ----------------------------------------------
  let igeom=i*8   #number of atoms +2 wat dimer 6 + 2 
- head -$igeom $movie | tail -n8 >> $folder/TRAJ.$i/$runtype/$projectname_$i.xyz   #i-th geometry
+ head -$igeom $movie | tail -n8 > $folder/TRAJ.$i/$runtype/${projectname}_${i}.xyz   #i-th geometry
  
+
  # set which geometry file to use for runtype calclinput files have only COORD_FILE_NAME without any other specification COORD_FILE_NAME dimer.xyz
- sed -i 's/COORD_FILE_NAME/COORD_FILE_NAME $projectname_$i.xyz/g' $folder/TRAJ.$i/$runtype/$runtype.inp  
+ sed -i "s/COORD_FILE_NAME/COORD_FILE_NAME ${projectname}_${i}.xyz/g" $folder/TRAJ.$i/$runtype/$runtype.inp  
  #--------------------------------------------------
 
 
