@@ -129,6 +129,8 @@ NPROCS=$NPROCS   # ech paralell job to have X cores
 LOGFILE=${folder}_${runtype}_${i}_\${PBS_JOBID}.log #input file
 PATCHED=$PATCHED                                                         #number of CPUs
 OUTFILE=$runtype.out
+$GEOMFILE=${projectname}_${i}.xyz
+RUNTYPE=${runtype}
 
 EOF
 cat $INPUTDIR/CP2Ks-dynamics >> $folder/TRAJ.$i/$runtype/r.$runtype.$i
@@ -151,10 +153,10 @@ do
    if [[ -f "$projectname.$runtype.$k.sh" ]];then
       echo "wait" >> $projectname.$runtype.$k.sh     # whille all parallel jobs running, wait until the very last traj is done
       echo "Submiting: $projectname.$runtype.$k.sh"
-      qsub $projectname.$runtype.$k.sh
       chmod +x $projectname.$runtype.$k.sh
+      qsub $projectname.$runtype.$k.sh
    fi
-   wait 5s
+wait 5s
 done
 
 

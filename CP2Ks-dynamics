@@ -35,8 +35,13 @@ mkdir $SCRDIR
 
 #copy input and WF , proper WF selected according to the type of calculation in launchCP2k=dynamics
 cp $IWORKDIR/$INPFILE  $SCRDIR/.
-cp $IWORKDIR/$WFFILE   $SCRDIR/.
 cp $IWORKDIR/$LOGFILE  $SCRDIR/.
+cp $IWORKDIR/$GEOMFILE  $SCRDIR/.
+
+if [[ "$RUNTYPE" = "SCFION" ]] && [ "$RUNTYPE" != "RTP" ] ; then 
+   cp $IWORKDIR/$WFFILE   $SCRDIR/.
+
+fi
 
 cd $SCRDIR
 
