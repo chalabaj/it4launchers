@@ -132,7 +132,7 @@ OUTFILE=$runtype.out
 
 EOF
 cat $INPUTDIR/CP2Ks-dynamics >> $folder/TRAJ.$i/$runtype/r.$runtype.$i
-
+chmod +x $folder/TRAJ.$i/$runtype/r.$runtype.$i
 #Simultaneous jobs in one file 
 echo "(cd $PWD/$folder/TRAJ.$i/$runtype/; ./r.$runtype.$i ) &">> $folder/$projectname.$runtype.$k.sh
 
@@ -144,6 +144,7 @@ let i++
 done
 
 cd $folder
+
 k=1
 for ((k=1;k<=$NJOBS;k++))
 do
