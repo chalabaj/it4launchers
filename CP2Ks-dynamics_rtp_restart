@@ -1,0 +1,54 @@
+# INPUTS FROM launchCP2Ks
+
+
+#ENVIRONMENT VARIABLE AND MODULE LOAD
+module purge
+
+if [[ "$PATCHED" = "patched" ]] ; then        #frank MO and SCF patches
+  CP2KEXE=/home/chalabaj/install/cp2k-5.1/exe/local/cp2k.popt
+elif [[ "$PATCHED" = "unpatched" ]] ; then   # clean stable release installed with newer libs
+  CP2KEXE=/home/chalabaj/install/cp2k-5.1_unpatched/exe/local/cp2k.popt
+fi
+module load imkl/2017.1.132-iimpi-2017a
+module load MPICH/3.2-GCC-5.3.1-snapshot-20160419-2.25
+
+#module load imkl/2018.0.128-iimpi-2018.00
+#module load MPICH/3.2.1-GCC-6.3.0-2.27
+export OMP_NUM_THREADS=1
+export SCRDIR=/scratch/work/user/$USER/$JOBNAME    # SCRATCH DIR WHERE TO RUN JOB
+export CP2K_DATA_DIR=/home/chalabaj/install/cp2k-5.1/data            # Where to find CP2K files such as basis set, PP etc
+#--------------------------------------------------------
+
+#PREPARE LOG FILE
+cd $IWORKDIR
+echo  ${PBS_JOBID}     > ${LOGFILE}
+echo  ${USER}         >> ${LOGFILE}
+echo  ${SCRDIR}       >> ${LOGFILE}
+echo  $IWORKDIR       >> ${LOGFILE}
+echo  $CP2KEXE        >> ${LOGFILE}
+echo  $PATCHED        >> ${LOGFILE}
+echo "start"          >> ${LOGFILE}
+#--------------------------------------------------------
+
+#PREPARE DIR AND RUN CALC
+mkdir $SCRDIR
+
+#copy input and WF , proper WF selected according to the type of calculation in launchCP2k=dynamics
+cp $IWORKDIR/*  $SCRDIR/.
+
+cd $SCRDIR
+
+mpiexec -np $NPROCS $CP2KEXE  -i $INPFILE > $OUTFILE 
+echo "Job terminated normally."          >> ${LOGFILE}
+#--------------------------------------------------------
+
+#COPY CLEAN EXIT
+cd ../
+cp -pr $SCRDIR/* $IWORKDIR/.
+#cp $SCRDIR/$OUTFILE ${PBS_O_WORKDIR}/.
+#rm -rf $SCRDIR
+#--------------------------------------------------------
+
+#EXIT
+module purge
+exit
