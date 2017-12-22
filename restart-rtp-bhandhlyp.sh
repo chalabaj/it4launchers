@@ -2,7 +2,7 @@
 # restart CP2K multiple trajectory RTP dynamics
 # requires previour RTP run
 # launch this in supdirectory containing TRAJ.X folders
-folder=frankPBE        # Name of the folder with trajectories
+folder=frankBHandHLYP        # Name of the folder with trajectories
 ntrajs=47              # number of trajectories 
 projectname=DIMER      # projectname
 TASKPERJOB=3           # How many simulataneous tasks will be executed within one qsub file
@@ -54,27 +54,27 @@ echo "Checking for latest  restart file in $PWD"
 
 #this depends how far did the trajectories got in the last RTP run, check tail of eners
 #for STEP in {70000..120000..500}
- # do 
- #   if [[ -e "DIMER_$ITRAJ-RESTART-1_$STEP.rtpwfn" ]]; then
- #   echo "File DIMER_$ITRAJ-RESTART-1_$STEP.rtpwfn EXISTS"
- #    latest=$STEP
- #   fi
+ #do 
+ #  if [[ -e "DIMER_$ITRAJ-RESTART-1_$STEP.rtpwfn" ]]; then
+ #  echo "File DIMER_$ITRAJ-RESTART-1_$STEP.rtpwfn EXISTS"
+ #   latest=$STEP
+ #  fi
     
 #done
-#echo "Last restart is: $latest"
+echo "Last restart is: $latest"
 #copy only necessary files
 # file name depends on projectname in launchCP2ks-dynamics
-#cp  $SCRDIR/${projectname}_$ITRAJ-pos-1.xyz                 $KDE
-#cp  $SCRDIR/${projectname}_$ITRAJ-1.ener                    $KDE
+cp  $SCRDIR/${projectname}_$ITRAJ-pos-1.xyz                 $KDE
+cp  $SCRDIR/${projectname}_$ITRAJ-1.ener                    $KDE
 #cp  $SCRDIR/${projectname}_$ITRAJ-RESTART-1_$latest.rtpwfn  $KDE
 #cp  $SCRDIR/${projectname}_$ITRAJ-1_$latest.restart         $KDE
-#cp  $SCRDIR/${projectname}_$ITRAJ-1.restart                 $KDE
-#cp  $SCRDIR/${projectname}_$ITRAJ-RESTART.rtpwfn            $KDE
-#cp  $SCRDIR/*.bak*                                 $KDE
-#cp  $SCRDIR/*.out                                  $KDE
+cp  $SCRDIR/${projectname}_$ITRAJ-1.restart                 $KDE
+cp  $SCRDIR/${projectname}_$ITRAJ-RESTART.rtpwfn            $KDE
+cp  $SCRDIR/*.bak*                                 $KDE
+cp  $SCRDIR/*.out                                  $KDE
 
 cd $TRAJSDIR/TRAJ.$ITRAJ/
-#echo "Removing old SCRATCH DIR"
+echo "Removing old SCRATCH DIR"
 #rm -r $SCRDIR
 echo "Working now in $PWD." 
 echo "Creating dir and cp file for restart containing:"
@@ -143,7 +143,7 @@ do
       echo "wait" >> $projectname.$runtype.$k.sh     # whille all parallel jobs running, wait until the very last traj is done
       echo "Submiting: $projectname.$runtype.$k.sh"
       chmod +x $projectname.$runtype.$k.sh
-      qsub $projectname.$runtype.$k.sh
+#      qsub $projectname.$runtype.$k.sh
    fi
 
 done
