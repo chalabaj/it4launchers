@@ -1,6 +1,6 @@
 #!/bin/bash
-module purge
-module load MPICH/3.2-GCC-5.3.0-2.25
+#module purge
+#module load MPICH/3.2-GCC-5.3.0-2.25
 #OpenMPI/1.10.7-GCC-7.1.0-2.28
 #PBS -V
 INPFILE=$1
@@ -14,28 +14,27 @@ export INTGDIR=${scratch}/MOLPRO-${PBS_JOBID}
 export WORKDIR=${PBS_O_WORKDIR}
 mkdir -p $SCRATCH
 
-export MOLPRO_OPTIONS="--nobackup --no-xml-output -o${OUTFILE} -d${SCRATCH} -I${INTGDIR} -W${WORKDIR} -m8M"
-export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2012/bin/molpro
-#export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2015_1_linux_x86_64_i8/bin/molpro
+export MOLPRO_OPTIONS="--nobackup --no-xml-output -o${OUTFILE} -d${SCRATCH} -I${INTGDIR} -W${WORKDIR} -m8M" #-mpp
+#export MOLPROEXE=/home/chalabaj/prog/molpro/molprop_2012/bin/molpro
+export MOLPROEXE=/home/chalabaj/prog/molpro/molpro_2015_1_linux_x86_64_i8/bin/molpro
 export OMP_NUM_THREADS=1
-#export MPIRUN=/home/chalabaj/prog/opempi/1.10.4/bin/mpirun
+export MPIRUN=/home/chalabaj/prog/molpro/molpro_2015_1_linux_x86_64_i8/bin/mpiexec.hydra 
 
-#cp $PBS_O_WORKDIR/$INPFILE $SCRATCH/.
+cp $PBS_O_WORKDIR/$INPFILE $SCRATCH/.
 cd $WORKDIR 
 echo  ${PBS_JOBID}    > ${LOGFILE}
 echo  ${USER}         >> ${LOGFILE}
 echo  ${SCRATCH}       >>  ${LOGFILE}
 echo  $PBS_O_WORKDIR  >>  ${LOGFILE}
 
-echo "start" > ${LOGFILE}
-mpirun -np 4 $MOLPROEXE < $INPFILE 
-
+echo "start" >> ${LOGFILE}
+$MOLPROEXE --launcher "${MPIRUN} %x" <${INPFILE} >> ${LOGFILE}
 #   /usr/bin/time -a -o ${LOGFILE} $MOLPROEXE <${INPFILE} >>${LOGFILE}
 # --hostfile $PBS_NODEFILE
 #cp  $SCRATCH/* ${PBS_O_WORKDIR}/.
-echo "mpi" >> ${LOGFILE}
-rm -rf $SCRATCH
-echo "rm" >> ${LOGFILE}
-module purge
-echo "purge" >> ${LOGFILE}
+
+#rm -rf $SCRATCH
+echo "Job terminated normally." >> ${LOGFILE}
+#module purge
+#echo "purge" >> ${LOGFILE}
 exit

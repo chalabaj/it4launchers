@@ -38,15 +38,14 @@ queue=$3
 
 #mpiprocs=4:
 walltime=$4
-
+#OPEN-11-34
 cat > r.$name << EOF
 #!/bin/bash
 
 #PBS -q $queue
-#PBS -N $name.out
-#PBS -l select=1:ncpus=24:mpiprocs=4:mem=16gb:ompthreads=1
+#PBS -l select=1:ncpus=24:mpiprocs=24:mem=120gb:ompthreads=1
 #PBS -l walltime=$walltime
-#PBS -A OPEN-11-34
+#PBS -A OPEN-10-48
 
 MOLPROs $input $nproc 
 EOF
